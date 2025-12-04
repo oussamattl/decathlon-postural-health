@@ -1,0 +1,14 @@
+{
+  "name": "decathlon-postural-health",
+  "version": "1.0.0",
+  "description": "Application web pour prévenir les blessures - Hackathon Decathlon Digital",
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && node server.js",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "keywords": ["decathlon", "health", "posture", "sport"],
+  "author": "",
+  "license": "MIT"
+}
+
