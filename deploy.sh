@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Script de déploiement rapide pour Decathlon Postural Health
+# Script de déploiement AWS pour Decathlon Postural Health
 # Usage: ./deploy.sh [frontend|backend|all]
 
 set -e
 
-echo "🚀 Déploiement Decathlon Postural Health"
-echo "========================================"
+echo "🚀 Déploiement AWS - Decathlon Postural Health"
+echo "=============================================="
 
 DEPLOY_TYPE=${1:-all}
 
@@ -24,17 +24,19 @@ deploy_frontend() {
     echo "3. Cliquez sur 'New app' → 'Host web app'"
     echo "4. Connectez votre repository"
     echo "5. Ajoutez la variable d'environnement :"
-    echo "   VITE_API_URL = https://VOTRE_BACKEND_URL"
+    echo "   VITE_API_URL = http://VOTRE_BACKEND_URL.elasticbeanstalk.com"
     echo ""
     echo -e "${GREEN}✅ Frontend prêt pour déploiement${NC}"
 }
 
-deploy_backend_eb() {
+deploy_backend() {
     echo -e "${BLUE}📦 Déploiement Backend (AWS Elastic Beanstalk)...${NC}"
     
     if ! command -v eb &> /dev/null; then
         echo -e "${YELLOW}⚠️  EB CLI n'est pas installé${NC}"
-        echo "Installez-le avec : pip install awsebcli"
+        echo "Installez-le avec :"
+        echo "  Windows: pip install awsebcli"
+        echo "  Mac/Linux: pip3 install awsebcli --user"
         exit 1
     fi
     
@@ -45,51 +47,48 @@ deploy_backend_eb() {
         eb init
     fi
     
-    echo "Déploiement..."
-    eb deploy
+    # Vérifier si l'environnement existe
+    if ! eb list &>/dev/null || [ -z "$(eb list 2>/dev/null)" ]; then
+        echo "Création de l'environnement..."
+        eb create decathlon-backend
+    else
+        echo "Déploiement sur l'environnement existant..."
+        eb deploy
+    fi
     
     echo -e "${GREEN}✅ Backend déployé${NC}"
+    echo ""
     echo "URL du backend :"
-    eb status | grep "CNAME"
+    eb status | grep "CNAME" || eb status
+    
+    echo ""
+    echo "📝 N'oubliez pas de :"
+    echo "   1. Configurer FRONTEND_URL dans Elastic Beanstalk après déploiement du frontend"
+    echo "   2. Tester : eb open"
     
     cd ..
 }
 
-deploy_backend_railway() {
-    echo -e "${BLUE}📦 Déploiement Backend (Railway)...${NC}"
-    echo ""
-    echo "1. Allez sur https://railway.app"
-    echo "2. Créez un nouveau projet"
-    echo "3. Connectez votre repository GitHub"
-    echo "4. Sélectionnez le dossier 'backend'"
-    echo "5. Ajoutez les variables d'environnement :"
-    echo "   - PORT = 3001"
-    echo "   - NODE_ENV = production"
-    echo ""
-    echo -e "${GREEN}✅ Instructions Railway affichées${NC}"
-}
-
 deploy_all() {
-    echo -e "${YELLOW}Choisissez votre méthode de déploiement :${NC}"
-    echo "1) AWS Elastic Beanstalk (recommandé pour AWS complet)"
-    echo "2) Railway (plus simple, gratuit)"
+    echo -e "${YELLOW}Déploiement complet sur AWS${NC}"
     echo ""
-    read -p "Votre choix (1 ou 2) : " choice
+    echo "Ordre recommandé :"
+    echo "1. Backend d'abord (pour obtenir l'URL)"
+    echo "2. Frontend ensuite (pour configurer VITE_API_URL)"
+    echo ""
+    read -p "Commencer par le backend ? (o/n) : " choice
     
-    case $choice in
-        1)
-            deploy_backend_eb
-            deploy_frontend
-            ;;
-        2)
-            deploy_backend_railway
-            deploy_frontend
-            ;;
-        *)
-            echo "Choix invalide"
-            exit 1
-            ;;
-    esac
+    if [[ $choice == "o" || $choice == "O" ]]; then
+        deploy_backend
+        echo ""
+        echo -e "${YELLOW}Maintenant déployez le frontend :${NC}"
+        deploy_frontend
+    else
+        deploy_frontend
+        echo ""
+        echo -e "${YELLOW}Maintenant déployez le backend :${NC}"
+        deploy_backend
+    fi
 }
 
 case $DEPLOY_TYPE in
@@ -97,15 +96,7 @@ case $DEPLOY_TYPE in
         deploy_frontend
         ;;
     backend)
-        echo "Choisissez :"
-        echo "1) AWS Elastic Beanstalk"
-        echo "2) Railway"
-        read -p "Votre choix : " choice
-        if [ $choice -eq 1 ]; then
-            deploy_backend_eb
-        else
-            deploy_backend_railway
-        fi
+        deploy_backend
         ;;
     all)
         deploy_all
@@ -117,10 +108,8 @@ case $DEPLOY_TYPE in
 esac
 
 echo ""
-echo -e "${GREEN}🎉 Déploiement terminé !${NC}"
+echo -e "${GREEN}🎉 Instructions de déploiement affichées !${NC}"
 echo ""
-echo "📝 N'oubliez pas de :"
-echo "   1. Configurer VITE_API_URL dans Amplify avec l'URL du backend"
-echo "   2. Tester l'application complète"
-echo "   3. Vérifier les logs en cas d'erreur"
-
+echo "📚 Pour plus de détails, consultez :"
+echo "   - DEPLOY_QUICK.md (guide rapide)"
+echo "   - DEPLOYMENT.md (guide complet)"

@@ -1,6 +1,6 @@
 # ✅ Configuration AWS - Résumé
 
-## 📦 Fichiers Créés pour le Déploiement
+## 📦 Fichiers Créés pour le Déploiement AWS
 
 ### Configuration Frontend (AWS Amplify)
 - ✅ `amplify.yml` - Configuration de build pour AWS Amplify
@@ -8,35 +8,31 @@
 - ✅ `frontend/src/components/Quiz.jsx` - Mise à jour pour utiliser les variables d'environnement
 
 ### Configuration Backend (Elastic Beanstalk)
-- ✅ `.elasticbeanstalk/config.yml` - Configuration Elastic Beanstalk
+- ✅ `.elasticbeanstalk/config.yml` - Configuration Elastic Beanstalk (sera créé par `eb init`)
 - ✅ `backend/.ebextensions/nodecommand.config` - Commande de démarrage Node.js
 - ✅ `backend/.ebextensions/environment.config` - Variables d'environnement
-- ✅ `backend/Procfile` - Pour Railway/Heroku (alternative)
-- ✅ `backend/server.js` - CORS configuré pour la production
+- ✅ `backend/server.js` - CORS configuré pour AWS Amplify et production
 
 ### Documentation
-- ✅ `DEPLOYMENT.md` - Guide complet de déploiement
-- ✅ `DEPLOY_QUICK.md` - Guide rapide (10 minutes)
-- ✅ `deploy.sh` - Script de déploiement automatique
+- ✅ `DEPLOYMENT.md` - Guide complet de déploiement AWS
+- ✅ `DEPLOY_QUICK.md` - Guide rapide (15 minutes)
+- ✅ `deploy.sh` - Script de déploiement automatique (optionnel)
 
 ---
 
-## 🚀 Méthodes de Déploiement Disponibles
+## 🚀 Architecture AWS
 
-### Option 1 : AWS Complet (Recommandé pour production)
-- **Frontend** : AWS Amplify
-- **Backend** : AWS Elastic Beanstalk
-- **Coût** : Gratuit (Free Tier) pendant 12 mois
+### Frontend : AWS Amplify
+- Déploiement automatique via Git
+- Build avec Vite
+- HTTPS automatique
+- CDN global
 
-### Option 2 : Hybride (Recommandé pour hackathon)
-- **Frontend** : AWS Amplify
-- **Backend** : Railway.app (plus simple, gratuit)
-- **Coût** : Totalement gratuit
-
-### Option 3 : Alternative Simple
-- **Frontend** : AWS Amplify ou Vercel
-- **Backend** : Railway ou Render
-- **Coût** : Totalement gratuit
+### Backend : AWS Elastic Beanstalk
+- Node.js 18
+- Auto-scaling
+- Health checks
+- Monitoring intégré
 
 ---
 
@@ -48,38 +44,56 @@
 3. **Quiz.jsx** : Mise à jour pour utiliser la variable d'environnement
 
 ### Backend
-1. **CORS amélioré** : Configuration pour accepter les requêtes depuis le frontend déployé
-2. **Variables d'environnement** : Support de `PORT` et `NODE_ENV`
-3. **Production ready** : Configuration pour Elastic Beanstalk
+1. **CORS configuré** : Accepte automatiquement les domaines `*.amplifyapp.com` et `*.amazonaws.com`
+2. **Variables d'environnement** : Support de `PORT` (automatique avec EB) et `NODE_ENV`
+3. **Production ready** : Serveur écoute sur `0.0.0.0` pour toutes les interfaces
+4. **Health check** : Route `/api/health` pour Elastic Beanstalk
 
 ---
 
 ## 📝 Prochaines Étapes
 
-1. **Lire** : `DEPLOY_QUICK.md` pour un déploiement rapide (10 min)
-2. **Ou lire** : `DEPLOYMENT.md` pour un guide complet
-3. **Déployer** : Suivre les instructions selon votre choix
+### Option 1 : Guide Rapide (15 min)
+Consultez **`DEPLOY_QUICK.md`** pour un déploiement rapide.
+
+### Option 2 : Guide Complet
+Consultez **`DEPLOYMENT.md`** pour toutes les instructions détaillées.
+
+### Ordre de Déploiement
+
+1. **D'abord le Backend** (10 min)
+   - Installer EB CLI
+   - `cd backend && eb init`
+   - `eb create decathlon-backend`
+   - Obtenir l'URL
+
+2. **Ensuite le Frontend** (5 min)
+   - Connecter le repo à Amplify
+   - Configurer la variable `VITE_API_URL` avec l'URL du backend
+   - Déployer
+
+3. **Configurer CORS** (2 min)
+   - Mettre à jour `FRONTEND_URL` dans Elastic Beanstalk
+   - Redéployer le backend si nécessaire
 
 ---
 
-## ⚡ Déploiement Express (5 commandes)
+## ⚡ Commandes Essentielles
 
 ```bash
-# 1. Commit tout
-git add .
-git commit -m "Ready for AWS deployment"
-git push origin main
+# Backend - Initialisation (première fois)
+cd backend
+eb init
+eb create decathlon-backend
 
-# 2. Backend sur Railway (5 min)
-# Aller sur railway.app, créer projet, sélectionner dossier backend
+# Backend - Déploiement
+eb deploy
 
-# 3. Frontend sur Amplify (5 min)
-# Aller sur console.aws.amazon.com/amplify, connecter repo
+# Backend - Logs
+eb logs
 
-# 4. Configurer variable d'environnement
-# Dans Amplify : VITE_API_URL = https://xxx.railway.app
-
-# 5. Tester !
+# Backend - Statut
+eb status
 ```
 
 ---
@@ -87,11 +101,23 @@ git push origin main
 ## ✅ Checklist de Déploiement
 
 - [x] Configuration Amplify créée (`amplify.yml`)
-- [x] Configuration Elastic Beanstalk créée
+- [x] Configuration Elastic Beanstalk préparée (`.ebextensions/`)
 - [x] CORS configuré pour production
 - [x] Variables d'environnement configurées
 - [x] Documentation complète créée
-- [x] Scripts de déploiement prêts
+- [x] Serveur prêt pour AWS (écoute sur 0.0.0.0)
 
-**Tout est prêt pour le déploiement ! 🚀**
+**Tout est prêt pour le déploiement AWS ! 🚀**
 
+---
+
+## 🎯 Points Clés
+
+1. **Backend d'abord** : Déployez le backend pour obtenir son URL
+2. **Variables d'environnement** : Configurez `VITE_API_URL` dans Amplify
+3. **CORS** : Le backend accepte déjà automatiquement les domaines AWS
+4. **Gratuit** : Tout est gratuit pendant 12 mois avec AWS Free Tier
+
+---
+
+**Prêt à déployer ! Consultez `DEPLOY_QUICK.md` pour commencer. 🏆**

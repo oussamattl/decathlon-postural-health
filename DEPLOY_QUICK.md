@@ -1,46 +1,63 @@
-# ⚡ Déploiement Rapide (10 minutes)
+# ⚡ Déploiement AWS Rapide (15 minutes)
 
-Guide ultra-rapide pour déployer l'application pour le hackathon.
+Guide ultra-rapide pour déployer l'application sur AWS.
 
-## 🎯 Solution Recommandée pour Hackathon
+## 🎯 Architecture AWS
 
-**Frontend : AWS Amplify** (gratuit, 5 min)  
-**Backend : Railway** (gratuit, 5 min)
+**Frontend : AWS Amplify** (gratuit)  
+**Backend : AWS Elastic Beanstalk** (gratuit avec Free Tier)
 
 ---
 
-## 📦 Partie 1 : Backend sur Railway (5 min)
+## 📦 Partie 1 : Backend sur AWS Elastic Beanstalk (10 min)
+
+### Prérequis
+
+Installer AWS EB CLI :
+```bash
+pip install awsebcli
+# ou sur Mac/Linux
+pip3 install awsebcli --user
+```
 
 ### Étapes :
 
-1. **Créer un compte**
-   - Aller sur [railway.app](https://railway.app)
-   - Se connecter avec GitHub
+1. **Aller dans le dossier backend**
+   ```bash
+   cd backend
+   ```
 
-2. **Créer un projet**
-   - Cliquer sur "New Project"
-   - Choisir "Deploy from GitHub repo"
-   - Sélectionner votre repository
+2. **Initialiser Elastic Beanstalk** (première fois seulement)
+   ```bash
+   eb init
+   ```
+   
+   Réponses :
+   - Region : `eu-west-1` (ou votre région préférée)
+   - Platform : `Node.js`
+   - Platform version : `Node.js 18`
+   - Application name : `decathlon-postural-health`
 
-3. **Configurer le service**
-   - Cliquer sur "+ New" → "GitHub Repo"
-   - Sélectionner le dossier **`backend`** uniquement
-   - Railway détecte automatiquement Node.js
+3. **Créer l'environnement**
+   ```bash
+   eb create decathlon-backend
+   ```
+   
+   ⏱️ Attendre 5-10 minutes (première création)
 
-4. **Variables d'environnement** (optionnel)
-   - Ouvrir "Variables"
-   - Ajouter :
-     ```
-     PORT=3001
-     NODE_ENV=production
-     ```
+4. **Obtenir l'URL du backend**
+   ```bash
+   eb status
+   ```
+   
+   Copier l'URL (ex: `decathlon-backend.XXXXX.elasticbeanstalk.com`)
 
-5. **Obtenir l'URL**
-   - Une fois déployé, cliquer sur le service
-   - Cliquer sur le domaine généré (ex: `xxx.up.railway.app`)
-   - **Copier cette URL** (vous en aurez besoin après)
+5. **Configurer les variables d'environnement**
+   ```bash
+   eb setenv NODE_ENV=production FRONTEND_URL=https://votre-app.amplifyapp.com
+   ```
 
-✅ **Backend déployé !** URL : `https://xxx.up.railway.app`
+✅ **Backend déployé !** URL : `http://decathlon-backend.XXXXX.elasticbeanstalk.com`
 
 ---
 
@@ -51,14 +68,14 @@ Guide ultra-rapide pour déployer l'application pour le hackathon.
 1. **Préparer le repository**
    ```bash
    git add .
-   git commit -m "Ready for deployment"
+   git commit -m "Ready for AWS deployment"
    git push origin main
    ```
 
 2. **Créer l'app Amplify**
    - Aller sur [AWS Amplify Console](https://console.aws.amazon.com/amplify/)
    - Cliquer sur "New app" → "Host web app"
-   - Choisir votre Git provider (GitHub/GitLab)
+   - Choisir votre Git provider (GitHub/GitLab/Bitbucket)
    - Autoriser l'accès à votre repository
 
 3. **Configurer le build**
@@ -72,9 +89,10 @@ Guide ultra-rapide pour déployer l'application pour le hackathon.
    - Ajouter :
      ```
      Key: VITE_API_URL
-     Value: https://xxx.up.railway.app  (l'URL de votre backend Railway)
+     Value: http://decathlon-backend.XXXXX.elasticbeanstalk.com
      ```
-   - Sauvegarder et redémarrer le build (si nécessaire)
+     (Utiliser l'URL obtenue à l'étape 4 du backend)
+   - Sauvegarder et redémarrer le build
 
 5. **Attendre le déploiement**
    - Le build prend 2-3 minutes
@@ -87,7 +105,7 @@ Guide ultra-rapide pour déployer l'application pour le hackathon.
 ## ✅ Vérification
 
 1. **Tester le backend**
-   - Ouvrir : `https://xxx.up.railway.app/api/health`
+   - Ouvrir : `http://decathlon-backend.XXXXX.elasticbeanstalk.com/api/health`
    - Devrait afficher : `{"status":"OK",...}`
 
 2. **Tester le frontend**
@@ -97,21 +115,30 @@ Guide ultra-rapide pour déployer l'application pour le hackathon.
 
 ---
 
+## 🔧 Déploiement des Modifications
+
+### Backend
+```bash
+cd backend
+eb deploy
+```
+
+### Frontend
+- Les modifications sont automatiquement déployées via Git
+- Chaque push sur `main` déclenche un nouveau déploiement
+
+---
+
 ## 🔧 Si ça ne marche pas
 
 ### Erreur CORS
 
-Modifier `backend/server.js` ligne 12, ajouter votre domaine Amplify :
-
-```javascript
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://xxx.amplifyapp.com', // Ajouter votre URL Amplify
-  // ...
-]
+Vérifier que `FRONTEND_URL` est bien configurée dans Elastic Beanstalk :
+```bash
+cd backend
+eb setenv FRONTEND_URL=https://votre-app.amplifyapp.com
+eb deploy
 ```
-
-Puis redéployer sur Railway.
 
 ### Build Amplify échoue
 
@@ -119,12 +146,17 @@ Puis redéployer sur Railway.
 2. S'assurer que `amplify.yml` existe à la racine
 3. Vérifier que tous les fichiers sont commités
 
+### Backend ne démarre pas
+
+1. Vérifier les logs : `cd backend && eb logs`
+2. Vérifier que le PORT est bien configuré (EB utilise automatiquement le port 8080)
+
 ---
 
-## 💰 Coûts
+## 💰 Coûts AWS
 
 - **AWS Amplify** : Gratuit (1000 min build/mois)
-- **Railway** : Gratuit ($5 crédit/mois)
+- **Elastic Beanstalk** : Gratuit (Free Tier EC2 t2.micro pendant 12 mois)
 
 **Total : GRATUIT pour le hackathon !** 🎉
 
@@ -132,10 +164,11 @@ Puis redéployer sur Railway.
 
 ## 📝 Checklist Finale
 
-- [ ] Backend déployé sur Railway
-- [ ] URL backend copiée
+- [ ] Backend déployé sur Elastic Beanstalk
+- [ ] URL backend obtenue
 - [ ] Frontend déployé sur Amplify
-- [ ] Variable `VITE_API_URL` configurée
+- [ ] Variable `VITE_API_URL` configurée dans Amplify
+- [ ] Variable `FRONTEND_URL` configurée dans Elastic Beanstalk
 - [ ] Application testée complètement
 - [ ] Pas d'erreurs dans la console
 
@@ -144,11 +177,10 @@ Puis redéployer sur Railway.
 ## 🎯 URLs Finales
 
 - **Frontend** : `https://xxx.amplifyapp.com`
-- **Backend** : `https://xxx.up.railway.app`
+- **Backend** : `http://xxx.elasticbeanstalk.com`
 
 **Parfait pour la présentation ! 🏆**
 
 ---
 
-**Temps total : ~10 minutes** ⚡
-
+**Temps total : ~15 minutes** ⚡

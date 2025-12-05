@@ -1,20 +1,20 @@
-# 🚀 Guide de Déploiement AWS
+# 🚀 Guide de Déploiement AWS Complet
 
 Guide complet pour déployer **Decathlon Postural Health** sur AWS.
 
-## 📋 Architecture de Déploiement
+## 📋 Architecture AWS
 
 - **Frontend (React)** : AWS Amplify
 - **Backend (Node.js)** : AWS Elastic Beanstalk
 
 ---
 
-## 🌐 Option 1 : Déploiement Frontend sur AWS Amplify (Recommandé)
+## 🌐 Partie 1 : Déploiement Frontend sur AWS Amplify
 
 ### Prérequis
 - Compte AWS
 - Git repository (GitHub, GitLab, ou Bitbucket)
-- Node.js installé localement
+- Repository prêt avec le code
 
 ### Étapes de Déploiement
 
@@ -32,18 +32,23 @@ git push origin main
 1. **Connecter à AWS Amplify**
    - Aller sur [AWS Amplify Console](https://console.aws.amazon.com/amplify/)
    - Cliquer sur "New app" → "Host web app"
-   - Choisir votre Git provider (GitHub, GitLab, etc.)
+   - Choisir votre Git provider (GitHub, GitLab, Bitbucket)
    - Autoriser l'accès à votre repository
 
 2. **Configurer le Build**
    - Branch : `main` (ou votre branche principale)
-   - Build settings : Le fichier `amplify.yml` est déjà configuré
+   - Build settings : Le fichier `amplify.yml` est déjà configuré ✅
    - Cliquer sur "Save and deploy"
 
 3. **Variables d'Environnement** (Important !)
-   - Aller dans "Environment variables"
-   - Ajouter : `VITE_API_URL` = `https://YOUR_BACKEND_URL.elasticbeanstalk.com`
-   - Redémarrer le build
+   - Attendre que le backend soit déployé (Partie 2)
+   - Aller dans "App settings" → "Environment variables"
+   - Ajouter :
+     ```
+     Key: VITE_API_URL
+     Value: http://YOUR_BACKEND_URL.elasticbeanstalk.com
+     ```
+   - Redémarrer le build si nécessaire
 
 #### 3. Configuration Amplify
 
@@ -54,12 +59,12 @@ Le fichier `amplify.yml` est déjà créé et configure :
 
 ---
 
-## ⚙️ Option 2 : Déploiement Backend sur AWS Elastic Beanstalk
+## ⚙️ Partie 2 : Déploiement Backend sur AWS Elastic Beanstalk
 
 ### Prérequis
 - AWS CLI installé et configuré
 - Compte AWS avec permissions Elastic Beanstalk
-- EB CLI installé : `pip install awsebcli`
+- EB CLI installé
 
 ### Installation EB CLI
 
@@ -85,7 +90,7 @@ cd backend
 eb init
 
 # Choisir :
-# - Region : eu-west-1 (ou votre région)
+# - Region : eu-west-1 (ou votre région préférée)
 # - Platform : Node.js
 # - Platform version : Node.js 18
 # - Application name : decathlon-postural-health
@@ -95,23 +100,31 @@ eb init
 
 ```bash
 # Créer l'environnement (première fois)
-eb create decathlon-postural-health-backend
+eb create decathlon-backend
 
-# Ou si déjà créé, utiliser :
-eb use decathlon-postural-health-backend
+# ⏱️ Attendre 5-10 minutes (création de l'infrastructure)
 ```
 
 #### 3. Configurer l'Environnement
 
 ```bash
-# Ajouter les variables d'environnement
-eb setenv NODE_ENV=production PORT=8080
+# Obtenir l'URL du backend
+eb status
 
-# Ouvrir la console AWS pour voir l'URL
-eb open
+# Configurer les variables d'environnement
+eb setenv NODE_ENV=production FRONTEND_URL=https://votre-app.amplifyapp.com
+
+# (Mettre à jour FRONTEND_URL après avoir déployé le frontend)
 ```
 
-#### 4. Déployer
+#### 4. Obtenir l'URL du Backend
+
+```bash
+eb status
+# Notez l'URL : http://decathlon-backend.XXXXX.elasticbeanstalk.com
+```
+
+#### 5. Déployer les Modifications
 
 ```bash
 # Déployer les changements
@@ -122,43 +135,10 @@ eb logs
 
 # Vérifier le statut
 eb status
+
+# Ouvrir dans le navigateur
+eb open
 ```
-
-#### 5. Obtenir l'URL du Backend
-
-```bash
-eb status
-# Notez l'URL : http://decathlon-postural-health-backend.XXXXX.elasticbeanstalk.com
-```
-
----
-
-## 🔗 Option 3 : Solution Alternative Simple (Railway/Render)
-
-Pour un hackathon, vous pouvez aussi utiliser des solutions plus simples :
-
-### Backend sur Railway (Gratuit pour commencer)
-
-1. Aller sur [Railway.app](https://railway.app)
-2. "New Project" → "Deploy from GitHub repo"
-3. Sélectionner le dossier `backend`
-4. Variables d'environnement :
-   - `PORT` = `3001`
-   - `NODE_ENV` = `production`
-5. Obtenir l'URL du backend
-
-### Backend sur Render (Gratuit)
-
-1. Aller sur [Render.com](https://render.com)
-2. "New" → "Web Service"
-3. Connecter votre repo GitHub
-4. Configuration :
-   - Root Directory : `backend`
-   - Build Command : `npm install`
-   - Start Command : `node server.js`
-   - Environment : `Node`
-5. Variables d'environnement :
-   - `PORT` = `3001`
 
 ---
 
@@ -169,17 +149,17 @@ Pour un hackathon, vous pouvez aussi utiliser des solutions plus simples :
 Dans AWS Amplify Console → Environment variables :
 
 ```
-VITE_API_URL = https://votre-backend-url.elasticbeanstalk.com
+VITE_API_URL = http://decathlon-backend.XXXXX.elasticbeanstalk.com
 ```
 
 ### Backend (Elastic Beanstalk)
 
 ```bash
-eb setenv NODE_ENV=production PORT=8080 FRONTEND_URL=https://votre-app.amplifyapp.com
+eb setenv NODE_ENV=production FRONTEND_URL=https://votre-app.amplifyapp.com
 ```
 
 Ou dans la console AWS :
-- Elastic Beanstalk → Configuration → Software → Environment properties
+- Elastic Beanstalk → Votre environnement → Configuration → Software → Environment properties
 
 ---
 
@@ -189,7 +169,7 @@ Ou dans la console AWS :
 
 ```bash
 # Test de santé
-curl https://votre-backend-url.elasticbeanstalk.com/api/health
+curl http://decathlon-backend.XXXXX.elasticbeanstalk.com/api/health
 
 # Devrait retourner :
 # {"status":"OK","message":"Decathlon Postural Health API is running"}
@@ -210,27 +190,31 @@ curl https://votre-backend-url.elasticbeanstalk.com/api/health
 
 Si vous voyez des erreurs CORS :
 
-1. Vérifier que `FRONTEND_URL` est bien configurée dans le backend
-2. Modifier `backend/server.js` pour ajouter votre domaine Amplify
+1. Vérifier que `FRONTEND_URL` est bien configurée dans Elastic Beanstalk :
+   ```bash
+   eb setenv FRONTEND_URL=https://votre-app.amplifyapp.com
+   eb deploy
+   ```
 
-```javascript
-const allowedOrigins = [
-  'https://votre-app.amplifyapp.com',
-  // ...
-]
-```
+2. Le serveur accepte déjà automatiquement les domaines `*.amplifyapp.com`
 
 ### Build échoue sur Amplify
 
 1. Vérifier les logs dans AWS Amplify Console
 2. S'assurer que `package.json` est correct
-3. Vérifier que `amplify.yml` pointe vers le bon dossier
+3. Vérifier que `amplify.yml` pointe vers le bon dossier (`frontend`)
 
 ### Backend ne démarre pas
 
-1. Vérifier les logs : `eb logs`
-2. S'assurer que le PORT est bien configuré (8080 pour EB)
+1. Vérifier les logs : `cd backend && eb logs`
+2. S'assurer que le PORT est bien configuré (EB utilise automatiquement le port 8080)
 3. Vérifier que toutes les dépendances sont dans `package.json`
+
+### Backend ne répond pas
+
+1. Vérifier que le service est "Healthy" dans Elastic Beanstalk
+2. Vérifier les logs pour les erreurs
+3. Vérifier que le health check path `/api/health` fonctionne
 
 ---
 
@@ -240,14 +224,16 @@ const allowedOrigins = [
 .
 ├── amplify.yml                    # Configuration AWS Amplify
 ├── .elasticbeanstalk/
-│   └── config.yml                 # Configuration Elastic Beanstalk
+│   └── config.yml                 # Configuration Elastic Beanstalk (généré par eb init)
 ├── backend/
 │   ├── .ebextensions/
-│   │   ├── nodecommand.config     # Commande de démarrage
+│   │   ├── nodecommand.config     # Commande de démarrage Node.js
 │   │   └── environment.config     # Variables d'environnement
 │   └── server.js                  # Serveur Express
 └── frontend/
-    ├── .env.production            # Variables d'environnement production
+    ├── src/
+    │   └── config/
+    │       └── api.js             # Configuration API centralisée
     └── vite.config.js             # Configuration Vite
 ```
 
@@ -260,40 +246,65 @@ const allowedOrigins = [
 - Au-delà : ~$0.01 par GB de build storage
 
 ### Elastic Beanstalk (Backend)
-- **Gratuit** : L'environnement EC2 seulement
+- **Gratuit** : Free Tier EC2 t2.micro pendant 12 mois
 - EC2 t2.micro : **Gratuit** (Free Tier) pendant 12 mois
-- Après : ~$10-15/mois pour t2.micro
+- Après 12 mois : ~$10-15/mois pour t2.micro
 
 ### Total pour un Hackathon
-- **Gratuit** pendant les premiers mois (Free Tier)
+- **Gratuit** pendant les 12 premiers mois (Free Tier) 🎉
 
 ---
 
-## 🚀 Déploiement Rapide (5 minutes)
+## 🚀 Commandes Utiles
 
-### Frontend Amplify
+### Backend
 
-1. Push sur GitHub
-2. AWS Amplify → New app → Connect repo
-3. Ajouter variable : `VITE_API_URL`
-4. Deploy
+```bash
+cd backend
 
-### Backend Railway (Plus simple)
+# Créer un environnement
+eb create nom-environnement
 
-1. Railway.app → New Project → GitHub
-2. Sélectionner dossier `backend`
-3. Déployer
-4. Copier l'URL et l'ajouter dans Amplify
+# Déployer
+eb deploy
+
+# Voir les logs
+eb logs
+
+# Vérifier le statut
+eb status
+
+# Ouvrir dans le navigateur
+eb open
+
+# Configurer les variables
+eb setenv NOM_VAR=valeur
+
+# Lister les environnements
+eb list
+
+# Changer d'environnement
+eb use nom-environnement
+```
+
+### Frontend
+
+Les modifications sont automatiquement déployées via Git :
+- Chaque push sur `main` déclenche un nouveau build
+- Vérifier les logs dans AWS Amplify Console
 
 ---
 
 ## 📝 Checklist de Déploiement
 
 - [ ] Repository Git prêt (commité et pushé)
-- [ ] Backend déployé (Elastic Beanstalk ou Railway)
+- [ ] AWS CLI et EB CLI installés
+- [ ] Backend initialisé avec `eb init`
+- [ ] Backend déployé avec `eb create`
 - [ ] URL backend obtenue
 - [ ] Frontend déployé sur Amplify
 - [ ] Variable `VITE_API_URL` configurée dans Amplify
+- [ ] Variable `FRONTEND_URL` configurée dans Elastic Beanstalk
 - [ ] Test complet de l'application
 - [ ] Vérification des logs (pas d'erreurs)
 - [ ] Test sur mobile (responsive)
@@ -305,11 +316,18 @@ const allowedOrigins = [
 Après déploiement, vous aurez :
 
 - **Frontend** : `https://XXXXX.amplifyapp.com`
-- **Backend** : `https://XXXXX.elasticbeanstalk.com`
+- **Backend** : `http://XXXXX.elasticbeanstalk.com`
 
 Parfait pour la présentation du hackathon ! 🏆
 
 ---
 
-**Besoin d'aide ?** Vérifiez les logs dans les consoles AWS/Railway pour diagnostiquer les problèmes.
+## 📚 Ressources
 
+- [AWS Amplify Documentation](https://docs.aws.amazon.com/amplify/)
+- [AWS Elastic Beanstalk Documentation](https://docs.aws.amazon.com/elasticbeanstalk/)
+- [EB CLI Documentation](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3.html)
+
+---
+
+**Besoin d'aide ?** Vérifiez les logs dans les consoles AWS pour diagnostiquer les problèmes.
