@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, ArrowLeft } from 'lucide-react'
+import { getRecommendations } from '../data'
 
 const Quiz = () => {
   const navigate = useNavigate()
@@ -88,26 +89,19 @@ const Quiz = () => {
     }
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
-      const response = await fetch(`${apiUrl}/api/recommendations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(answers)
-      })
-      const data = await response.json()
+      // Utiliser la fonction locale au lieu de l'API
+      const recommendations = getRecommendations(answers)
       
       // Stocker les réponses et recommandations dans le localStorage
       localStorage.setItem('quizAnswers', JSON.stringify(answers))
-      localStorage.setItem('recommendations', JSON.stringify(data.recommendations))
+      localStorage.setItem('recommendations', JSON.stringify(recommendations))
       
       navigate('/dashboard')
     } catch (error) {
       console.error('Erreur lors de la soumission:', error)
-      alert('Erreur de connexion au serveur. Vérifiez que le backend est démarré.')
+      alert('Erreur lors du traitement des réponses.')
     }
   }
 
