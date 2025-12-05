@@ -1,7 +1,7 @@
 # Dependencies
 node_modules/
-package-lock.json
 yarn.lock
+# Note: package-lock.json est gardé pour les builds CI/CD
 
 # Build outputs
 dist/
